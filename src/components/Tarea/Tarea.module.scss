@@ -1,0 +1,106 @@
+@use "../../styles/variables"as *;
+
+.tarea {
+    @include flexCenter(column);
+    justify-content: space-around;
+    align-items: flex-start;
+    width: 100%;
+    background-color: var(--color-bg);
+    border: 2px solid var(--color-primary);
+    border-radius: 8px;
+    padding: 16px;
+    gap: 16px;
+
+    h3 {
+        color: var(--color-secondary);
+        font-size: 16px;
+
+        .numeroId {
+            color: var(--color-primary);
+        }
+    }
+
+
+
+    .descripcionYestado {
+        @include flexCenter(column);
+        align-items: flex-start;
+        justify-content: center;
+        width: 100%;
+        gap: 8px;
+
+        p {
+            color: var(--color-text-general);
+            font-size: 14px;
+        }
+    }
+
+}
+
+.containerBotones {
+    @include flexCenter(row);
+    justify-content: flex-start;
+    gap: 24px;
+
+    .buttonTarea {
+        @include flexCenter(row);
+        background-color: var(--color-secondary);
+        color: var(--color-bg);
+        font-weight: 500;
+        padding: 8px;
+        border-radius: 8px;
+        border: none;
+        font-size: 12px;
+
+        &:hover {
+            background-color: var(--color-primary);
+        }
+    }
+}
+
+
+
+
+
+@media screen and (min-width:1024px) {
+
+
+    .tarea {
+        border: 3px solid var(--color-primary);
+        border-radius: 16px;
+        padding: 16px;
+        gap: 16px;
+        min-height: 180px;
+
+        h3 {
+            font-size: 22px;
+        }
+
+        .descripcionYestado {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            width: 100%;
+
+
+            p:first-child {
+                max-width: 320px;
+            }
+
+            p {
+                font-size: 18px;
+            }
+        }
+
+    }
+
+
+}
+
+.completada {
+    background-color: #e6f7fd !important;
+
+    :global(&) {
+        background-color: #e6f7fd !important;
+    }
+}

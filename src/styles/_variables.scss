@@ -1,0 +1,14 @@
+@mixin flexCenter ($direct) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: $direct;
+}
+
+:root {
+    --color-primary: #047e94;
+    --color-secondary: #076793;
+    --color-text-general: #000000;
+        --color-text-secondary: #504f4f;
+    --color-bg: #ffffff;
+}

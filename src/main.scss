@@ -1,0 +1,12 @@
+@use "./styles/variables" as *;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Lato", sans-serif;
+}
+
+body {
+    background-color: #d5edf6;
+}

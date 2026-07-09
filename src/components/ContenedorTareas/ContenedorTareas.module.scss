@@ -1,0 +1,60 @@
+@use "../../styles/variables"as *;
+
+
+.containerTareas {
+    @include flexCenter(column);
+    gap: 16px;
+    margin: 16px auto 48px;
+
+    div {
+        width: 100%;
+    }
+
+    h2 {
+        font-size: 16px;
+        color: var(--color-text-general);
+    }
+
+    .titlePendientes {
+        margin-top: 16px;
+    }
+
+    .containerListaDeTareas {
+        @include flexCenter(column);
+        gap: 16px;
+        width: 100%;
+        margin: 16px auto;
+
+        ul,
+        li {
+            width: 100%;
+            list-style-type: none;
+        }
+    }
+}
+
+
+@media screen and (min-width:1024px) {
+
+
+    .containerTareas {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 32px;
+
+        h2 {
+            font-size: 24px;
+        }
+
+        .titlePendientes {
+            margin-top: 0px;
+        }
+
+        .containerListaDeTareas {
+            gap: 32px;
+            margin: 32px auto;
+        }
+    }
+
+
+}
