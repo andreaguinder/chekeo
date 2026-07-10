@@ -7,18 +7,32 @@ const Form = (task) => {
   const [descripcion, setDescripcion] = useState("")
   const [estaCompletada, setEstaCompletada] = useState(false)
 
+  const [error, setError] = useState("")
+
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    if (title.trim() === "") {
+      setError("El nombre de la tarea no puede estar vacío");
+      return;
+    }
+
     task.agregarTarea({ title: title, descripcion: descripcion, status: estaCompletada })
 
     setTitle("");
     setDescripcion("");
     setEstaCompletada(false);
+    setError("");
   }
 
   const handleTitle = (e) => {
+
     setTitle(e.target.value)
-  }
+
+    if (e.target.value.trim() !== "") {
+      setError("");
+    }
+    }
 
   const handleDescripcion = (e) => {
     setDescripcion(e.target.value)
@@ -42,6 +56,7 @@ const Form = (task) => {
               placeholder="Escribe el nombre de la tarea"
               onChange={(e) => handleTitle(e)}
               value={title} />
+              {error && <span className={styles.errorTitle}>{error}</span>}
           </div>
           <div>
             <label htmlFor="title">Descripción de la tarea:</label>

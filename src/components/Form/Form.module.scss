@@ -37,7 +37,7 @@
 
             input,
             textarea {
-                min-height: 24px;
+                min-height: 32px;
                 border-radius: 8px;
                 padding: 4px 8px;
                 width: 100%;
@@ -59,7 +59,7 @@
             }
 
             textarea {
-                min-height: 48px;
+                min-height: 64px;
             }
 
             div {
@@ -70,6 +70,12 @@
 
             label {
                 font-size: 14px;
+            }
+
+            .errorTitle {
+                color: var(--color-error);
+                font-size: 12px;
+                transform: translateY(-5px);
             }
         }
 
@@ -103,6 +109,8 @@
             }
 
         }
+
+
     }
 }
 
@@ -160,6 +168,10 @@
                 div {
                     gap: 8px;
                 }
+
+                            .errorTitle {
+                font-size: 14px;
+            }
             }
 
             .completada {
