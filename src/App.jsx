@@ -14,13 +14,8 @@ function App() {
 
   const agregarTarea = (dataTareas) => {
 
-    const nuevaTarea = { 
-        id: Date.now(), 
-        ...dataTareas 
-    };
-    
-    setListaTareas([nuevaTarea, ...listaTareas]);
-}
+    setListaTareas([{ id: listaTareas.length + 1, ...dataTareas }, ...listaTareas])
+  }
 
   const handleToggle = (id) => {
     setListaTareas(prev => prev.map(t =>
@@ -28,20 +23,20 @@ function App() {
     ));
   };
 
-const handleDelete = (id) => {
+  const handleDelete = (id) => {
     setListaTareas(prev => prev.filter(t => t.id !== id));
-};
+  };
 
   const [busqueda, setBusqueda] = useState("")
 
 
 
-const tareasFiltradas = useMemo(() => {
+  const tareasFiltradas = useMemo(() => {
 
-    return listaTareas.filter(t => 
-        t.title.toLowerCase().includes(busqueda.toLowerCase())
+    return listaTareas.filter(t =>
+      t.title.toLowerCase().includes(busqueda.toLowerCase())
     );
-}, [listaTareas, busqueda]);
+  }, [listaTareas, busqueda]);
 
 
   return (
@@ -51,8 +46,8 @@ const tareasFiltradas = useMemo(() => {
 
         <Navbar onSearch={(valor) => setBusqueda(valor)} />
         <Form agregarTarea={agregarTarea} />
-        <ContenedorTareas listaTareas={tareasFiltradas} handleToggle={handleToggle} handleDelete={handleDelete}/>
-    <Footer/>
+        <ContenedorTareas listaTareas={tareasFiltradas} handleToggle={handleToggle} handleDelete={handleDelete} />
+        <Footer />
       </ContenedorGeneral>
 
     </>
