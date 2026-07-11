@@ -10,20 +10,17 @@ import { ModalSuccess } from './components/ModalSuccess/ModalSuccess';
 import { UpdateToast } from './components/UpdateToast/UpdateToast';
 import { ContainerLoading } from "./components/ContainerLoading/ContainerLoading";
 
-// 🚀 Traemos el estado global de autenticación como en Zylos
 import { useAuth } from "./context/AuthContext";
 import { useFirebaseTasks } from "./hooks/useFirebaseTasks";
 
 import logo from "./assets/logo-todoan.png";
 
 function App() {
-  // 💡 Consumimos el usuario y los métodos del Contexto global
   const { user, loginWithGoogle, logout, authLoading } = useAuth();
 
-  // Mantenemos tu hook inteligente pasándole el user que viene del Contexto
+  // 🚀 Súper clave: Le pasamos el 'user' del contexto para que el hook use la misma sesión
   const [listaTareas, setListaTareas] = useFirebaseTasks(tareas, user);
 
-  // Tus funciones de negocio quedan exactamente igual
   const agregarTarea = (dataTareas) => {
     const nuevoId = listaTareas.length > 0 ? Math.max(...listaTareas.map(t => t.id)) + 1 : 1;
     setListaTareas([{ id: nuevoId, ...dataTareas }, ...listaTareas]);
@@ -61,11 +58,9 @@ function App() {
     return () => window.removeEventListener('appinstalled', handleAppInstalled);
   }, []);
 
-  // Opcional: Podés meter un loader estético mientras Firebase chequea la sesión inicial
+  // Tu componente hermoso de loading interactuando acá
   if (authLoading) {
-    return (
-      <ContainerLoading/>
-    );
+    return <ContainerLoading />;
   }
 
   return (

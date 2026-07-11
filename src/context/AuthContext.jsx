@@ -1,11 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
-    onAuthStateChanged, 
-    signInWithPopup, 
-    signInWithRedirect, 
-    getRedirectResult, 
-    signOut 
-} from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase'; 
 
 const AuthContext = createContext();
@@ -17,53 +11,32 @@ export function AuthProvider({ children }) {
     const [authLoading, setAuthLoading] = useState(true);
 
     useEffect(() => {
-        // 🚀 1. Esto es CLAVE para mobile: Escucha si el usuario vuelve de la redirección de Google
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result?.user) {
-                    setUser(result.user);
-                }
-            })
-            .catch((error) => {
-                console.error("Error al retornar de la redirección", error);
-            })
-            .finally(() => {
-                setAuthLoading(false);
-            });
-
-        // 2. Escucha los cambios de estado normales de la sesión
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
-            // Si no estamos esperando un resultado de redirección, apagamos el loading
-            if (!window.location.search.includes('code=')) {
-                setAuthLoading(false);
-            }
+            setAuthLoading(false);
         });
-        
         return () => unsubscribe();
     }, []);
 
-    const loginWithGoogle = () => {
-        setAuthLoading(true);
-
-        // 🚀 Detectamos si es un celular o tablet
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-        if (isMobile) {
-            // En el celu redirecciona en la misma pestaña (chau pop-ups bloqueados)
-            return signInWithRedirect(auth, googleProvider);
-        } else {
-            // En la compu mantiene el pop-up cómodo de siempre
-            return signInWithPopup(auth, googleProvider).catch((error) => {
-                console.error("Error en popup:", error);
-                setAuthLoading(false);
-            });
+    const loginWithGoogle = async () => {
+        try {
+            // Sin loaders intermedios previos para evitar el 'popup-blocked' en PC
+            const result = await signInWithPopup(auth, googleProvider);
+            setUser(result.user);
+            return result.user;
+        } catch (error) {
+            console.error("Error al iniciar sesión con Google desde el contexto:", error);
+            throw error;
         }
     };
 
-    const logout = () => {
-        setAuthLoading(true);
-        return signOut(auth).finally(() => setAuthLoading(false));
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setUser(null);
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+        }
     };
 
     return (
