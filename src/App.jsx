@@ -7,6 +7,7 @@ import { ContenedorTareas } from "./components/ContenedorTareas/ContenedorTareas
 import { Footer } from "./components/Footer/Footer";
 import { tareas } from "./data/mock"
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import { ModalSuccess } from './components/ModalSuccess/ModalSuccess';
 
 import logo from "./assets/logo-todoan.png";
 
@@ -43,6 +44,16 @@ function App() {
 
   const logoAlt = "Logo de Todoan, tu App de tareas";
 
+ const [mostrarModal, setMostrarModal] = useState(false);
+
+  useEffect(() => {
+    const handleAppInstalled = () => {
+      setMostrarModal(true);
+    };
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => window.removeEventListener('appinstalled', handleAppInstalled);
+  }, []);
+
   return (
     <>
 
@@ -53,7 +64,11 @@ function App() {
         <Form agregarTarea={agregarTarea} />
         <ContenedorTareas listaTareas={tareasFiltradas} handleToggle={handleToggle} handleDelete={handleDelete} />
         <Footer />
+
+        
       </ContenedorGeneral>
+
+      <ModalSuccess imagen={logo} alt={logoAlt} isOpen={mostrarModal} onClose={() => setMostrarModal(false)} />
 
     </>
   );
