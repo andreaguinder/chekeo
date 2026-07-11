@@ -43,9 +43,10 @@
                 width: 100%;
                 background: var(--color-bg);
                 color: var(--color-text-general);
-                border: 1px solid var(--color-secondary);
+                border: 2px solid var(--color-secondary);
                 gap: 8px;
                 min-width: 310px;
+                outline: none;
 
                 &::placeholder {
                     color: var(--color-text-secondary);
@@ -53,7 +54,7 @@
                 }
 
                 &:focus {
-                    border: 2px solid var(--color-secondary);
+                    border-color: var(--color-primary);
                 }
 
             }
@@ -151,11 +152,15 @@
                     width: 500px;
                     background: var(--color-bg);
                     color: var(--color-text-general);
-                    border: 1px solid var(--color-secondary);
                     gap: 16px;
+                    outline: none;
 
                     &::placeholder {
                         color: var(--color-text-secondary);
+                    }
+
+                    &:focus {
+                        border-color: var(--color-primary);
                     }
 
                 }
@@ -169,9 +174,9 @@
                     gap: 8px;
                 }
 
-                            .errorTitle {
-                font-size: 14px;
-            }
+                .errorTitle {
+                    font-size: 14px;
+                }
             }
 
             .completada {
