@@ -6,7 +6,7 @@
     gap: 16px;
     margin: 16px auto 48px;
 
-    div {
+    .containerTareaSola {
         width: 100%;
     }
 
@@ -51,7 +51,7 @@
         }
 
         .containerListaDeTareas {
-            gap: 32px;
+            gap: 16px;
             margin: 32px auto;
         }
     }

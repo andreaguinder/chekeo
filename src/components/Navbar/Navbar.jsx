@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styles from './Navbar.module.scss';
 
-const Navbar = ({ onSearch }) => {
+const Navbar = ({ onSearch, imagen, alt}) => {
 
     const [search, setSearch] = useState("")
     const inputRef = useRef(null);
@@ -19,7 +19,7 @@ const Navbar = ({ onSearch }) => {
     return (
 
         <div className={styles.navbar}>
-            <h1>Lista de tareas</h1>
+            <h1><img src={imagen} alt={alt} className={styles.logoTodoan} /></h1>
             <input type="text"
                 placeholder="Busca tu tarea..."
                 ref={inputRef}

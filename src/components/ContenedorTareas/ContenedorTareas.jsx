@@ -13,7 +13,7 @@ const ContenedorTareas = ({ listaTareas, handleToggle, handleDelete }) => {
         <>
 
             <section className={styles.containerTareas}>
-                <div>
+                <div className={styles.containerTareaSola}>
                     <h2 className={styles.titlePendientes}>Tareas pendientes ({pendientes.length})</h2>
                     <ul className={styles.containerListaDeTareas}>
                         {pendientes.map(tarea => (
@@ -24,7 +24,7 @@ const ContenedorTareas = ({ listaTareas, handleToggle, handleDelete }) => {
                     </ul>
                 </div>
 
-                <div>
+                <div className={styles.containerTareaSola}>
                     <h2>Tareas completadas ({completadas.length})</h2>
                     <ul className={styles.containerListaDeTareas}>
                         {completadas.map(tarea => (

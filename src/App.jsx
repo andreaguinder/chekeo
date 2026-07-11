@@ -8,6 +8,9 @@ import { Footer } from "./components/Footer/Footer";
 import { tareas } from "./data/mock"
 import { useLocalStorage } from "./hooks/useLocalStorage";
 
+import logo from "./assets/logo-todoan.png";
+
+
 function App() {
 
   const [listaTareas, setListaTareas] = useLocalStorage("misTareas", tareas);
@@ -38,13 +41,15 @@ function App() {
     );
   }, [listaTareas, busqueda]);
 
+  const logoAlt = "Logo de Todoan, tu lista de tareas";
 
   return (
     <>
 
       <ContenedorGeneral>
 
-        <Navbar onSearch={(valor) => setBusqueda(valor)} />
+        <Navbar imagen={logo} alt={logoAlt} onSearch={(valor) => setBusqueda(valor)}
+          />
         <Form agregarTarea={agregarTarea} />
         <ContenedorTareas listaTareas={tareasFiltradas} handleToggle={handleToggle} handleDelete={handleDelete} />
         <Footer />

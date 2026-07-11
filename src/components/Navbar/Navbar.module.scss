@@ -37,6 +37,10 @@
             border: 2px solid var(--color-secondary);
         }
     }
+
+    .logoTodoan {
+        max-width: 130px;
+    }
 }
 
 @media screen and (min-width: 1024px) {
@@ -63,5 +67,9 @@
             max-width: 800px;
 
         }
+
+            .logoTodoan {
+        max-width: 230px;
+    }
     }
 }

@@ -11,14 +11,7 @@
     padding: 16px;
     gap: 16px;
 
-    h3 {
-        color: var(--color-secondary);
-        font-size: 16px;
 
-        .numeroId {
-            color: var(--color-primary);
-        }
-    }
 
 
 
@@ -28,6 +21,8 @@
         justify-content: center;
         width: 100%;
         gap: 8px;
+            max-width: 210px;
+                            min-height: 36px;
 
         p {
             color: var(--color-text-general);
@@ -35,25 +30,82 @@
         }
     }
 
+    .containerTitle {
+        @include flexCenter(row);
+        justify-content: space-between;
+width: 100%;
+min-height: 36px;
+
+            .title {
+        color: var(--color-secondary);
+        font-size: 16px;
+        width: 100%;
+            max-width: 210px;
+
+        .numeroId {
+            color: var(--color-primary);
+        }
+    }
+    }
+
 }
 
 .containerBotones {
     @include flexCenter(row);
-    justify-content: flex-start;
     gap: 24px;
+    width: 100px;
 
-    .buttonTarea {
+    .btnPendiente {
         @include flexCenter(row);
-        background-color: var(--color-secondary);
-        color: var(--color-bg);
-        font-weight: 500;
-        padding: 8px;
-        border-radius: 8px;
+        background: none;
+        color: #005d8c;
         border: none;
-        font-size: 12px;
+        width: 20px;
+        height: 20px;
 
         &:hover {
-            background-color: var(--color-primary);
+            background-color: #c1d9fe91;
+            color: #014466;
+            border-radius: 4px;   
+            padding: 4px;       
+                    width: 24px;
+        height: 24px;  
+        }
+    }
+
+        .btnCompletada {
+        @include flexCenter(row);
+        background: none;
+        color: #30cf00;
+        border: none;
+                width: 20px;
+        height: 20px;
+
+        &:hover {
+            background-color: #2aac023a;
+            color: #1a6902;
+            border-radius: 4px;   
+            padding: 4px;      
+                    width: 24px;
+        height: 24px;  
+        }
+    }
+
+        .btnEliminar {
+        @include flexCenter(row);
+        background: none;
+        color: #ea1a1a;
+        border: none;
+                width: 20px;
+        height: 20px;
+
+        &:hover {
+            background-color: #ea1a1a4e;
+            color: #a70707;
+            border-radius: 4px;   
+            padding: 4px;     
+                    width: 24px;
+        height: 24px;  
         }
     }
 }
@@ -68,19 +120,17 @@
     .tarea {
         border: 3px solid var(--color-primary);
         border-radius: 16px;
-        padding: 16px;
-        gap: 16px;
-        min-height: 180px;
+        padding: 24px;
+        min-height: 140px;
 
-        h3 {
-            font-size: 22px;
-        }
 
         .descripcionYestado {
             flex-direction: row;
             align-items: flex-start;
             justify-content: space-between;
             width: 100%;
+                max-width: 420px;
+
 
 
             p:first-child {
@@ -88,12 +138,59 @@
             }
 
             p {
-                font-size: 18px;
+                font-size: 16px;
             }
+        }
+
+            .containerTitle {
+
+
+            .title {
+        font-size: 20px;
+            max-width: 420px;
+
+    }
+    }
+
+    }
+
+
+    .containerBotones {
+
+
+    .btnPendiente {
+
+        width: 24px;
+        height: 24px;
+
+                &:hover {
+                    width: 28px;
+        height: 28px;  
+        }
+    }
+
+        .btnCompletada {
+
+                width: 24px;
+        height: 24px;
+                &:hover {
+                    width: 28px;
+        height: 28px;  
         }
 
     }
 
+        .btnEliminar {
+
+                width: 24px;
+        height: 24px;
+
+                &:hover {
+                    width: 28px;
+        height: 28px;  
+        }
+    }
+}
 
 }
 
