@@ -21,7 +21,7 @@ function App() {
   const { user, loginWithGoogle, logout, authLoading } = useAuth();
 
   // Mantenemos tu hook inteligente pasándole el user que viene del Contexto
-  const [listaTareas, setListaTareas] = useFirebaseTasks(tareas);
+  const [listaTareas, setListaTareas] = useFirebaseTasks(tareas, user);
 
   // Tus funciones de negocio quedan exactamente igual
   const agregarTarea = (dataTareas) => {
