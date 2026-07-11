@@ -13,7 +13,7 @@ export default defineConfig({
         description: 'Una app genial para organizar mi día',
 
         theme_color: '#0E58C4',   
-        background_color: '#ecf4ff', 
+        background_color: '#d5edf6', 
         display: 'standalone',
         orientation: 'portrait',
         icons: [
