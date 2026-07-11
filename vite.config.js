@@ -8,8 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Mi Aplicación de Tareas',
-        short_name: 'To-Do List',
+        name: 'Todoan - Mi App de Tareas',
+        short_name: 'Todoan',
         description: 'Una app genial para organizar mi día',
 
         theme_color: '#0E58C4',   

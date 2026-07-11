@@ -1,32 +1,14 @@
 const tareas = [
   {
     id: 1,
-    title: "Pasear a Luna",
-    descripcion: "Ir a la plaza Luján",
+    title: "Esta es una tarea de ejemplo Pendiente",
+    descripcion: "Podés eliminarla (con el botón de tacho de basura) o marcarla como Completada (con el botón de check)",
     status: false
   },
   {
     id: 2,
-    title: "Sacar la basura",
-    descripcion: "Revisar los tachos de toda la casa",
-    status: false
-  },
-  {
-    id: 3,
-    title: "Lavar los platos",
-    descripcion: "Fijarse si hay detergente",
-    status: false
-  },
-  {
-      id: 4,
-    title: "Ir al super",
-    descripcion: "Comprar sal grusa",
-    status: false
-  },
-  {
-        id: 5,
-    title: "Mandados con papá y mamá",
-    descripcion: "Comprar regalo para Seba",
+    title: "Esta es una tarea de ejemplo Completada",
+    descripcion: "Podés eliminarla (con el botón de tacho de basura), o volverla a la lista de Pendientes (con el botón del reloj)",
     status: true
   }
 ]
