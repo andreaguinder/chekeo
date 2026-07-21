@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { 
   onAuthStateChanged, 
-  signInWithRedirect, 
+  signInWithPopup, 
   getRedirectResult, 
   signOut 
 } from 'firebase/auth';
@@ -15,36 +15,29 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
 
-    useEffect(() => {
-        // 1. Procesar el resultado de la redirección al volver a la app
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result) {
-                    setUser(result.user);
-                }
-            })
-            .catch((error) => {
-                console.error("Error al procesar el resultado de redirección:", error);
-            });
+useEffect(() => {
+  // getRedirectResult solo para atrapar errores de la redirección
+  getRedirectResult(auth).catch((error) => {
+    console.error("Error al procesar el resultado de redirección:", error);
+  });
 
-        // 2. Escuchar cambios en el estado de autenticación
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            setAuthLoading(false);
-        });
+  // onAuthStateChanged se encarga 100% de setear el usuario y quitar el loading
+  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser);
+    setAuthLoading(false);
+  });
 
-        return () => unsubscribe();
-    }, []);
+  return () => unsubscribe();
+}, []);
 
     const loginWithGoogle = async () => {
-        try {
-            // Usa redirección completa: el Service Worker no lo puede bloquear
-            await signInWithRedirect(auth, googleProvider);
-        } catch (error) {
-            console.error("Error al iniciar sesión con Google desde el contexto:", error);
-            throw error;
-        }
-    };
+  try {
+    await signInWithPopup(auth, googleProvider);
+  } catch (error) {
+    console.error("Error al iniciar sesión con Google:", error);
+    throw error;
+  }
+};
 
     const logout = async () => {
         try {
