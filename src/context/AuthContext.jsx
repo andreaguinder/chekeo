@@ -64,24 +64,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   // 🚀 Función síncrona inmediata para disparar el evento directo del usuario
-  const loginWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+ const loginWithGoogle = () => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // Disparar sin async/await intermedio
+  return signInWithPopup(auth, provider).catch((error) => {
+    if (error.code === 'auth/popup-closed-by-user') return;
+    console.error("Error en popup de Google:", error);
+  });
+};
 
-    if (isMobile) {
-      signInWithRedirect(auth, provider).catch((error) => {
-        console.error("Error en redirect de Google:", error);
-      });
-    } else {
-      // Disparo directo síncrono -> Cero bloqueos de popup
-      signInWithPopup(auth, provider).catch((error) => {
-        if (error.code === 'auth/popup-closed-by-user') return;
-        console.error("Error en popup de Google:", error);
-      });
-    }
-  };
 
   const logout = async () => {
     try {

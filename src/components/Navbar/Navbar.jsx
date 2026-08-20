@@ -1,8 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import styles from './Navbar.module.scss';
 import { LogOut } from 'lucide-react';
+import { useAuth } from "../../context/AuthContext"; // 👈 Tu ruta al AuthContext
 
-const Navbar = ({ onSearch, imagen, alt, user, onLogin, onLogout }) => {
+const Navbar = ({ onSearch, imagen, alt }) => {
+    // 👈 Traés todo directo del Context:
+    const { user, loginWithGoogle, logout } = useAuth();
+
     const [search, setSearch] = useState("");
     const inputRef = useRef(null);
 
@@ -20,7 +24,6 @@ const Navbar = ({ onSearch, imagen, alt, user, onLogin, onLogout }) => {
 
     return (
         <div className={styles.navbar}>
-            {/* Cabecera con Logo y Auth */}
             <div className={styles.topHeader}>
                 <h1>
                     <img src={imagen} alt={alt} className={styles.logoChekeo} />
@@ -41,7 +44,7 @@ const Navbar = ({ onSearch, imagen, alt, user, onLogin, onLogout }) => {
                             <button 
                                 type="button"
                                 className={styles.logoutBtn} 
-                                onClick={onLogout}
+                                onClick={logout}
                                 aria-label="Cerrar sesión"
                                 title="Cerrar sesión"
                             >
@@ -52,7 +55,7 @@ const Navbar = ({ onSearch, imagen, alt, user, onLogin, onLogout }) => {
                         <button 
                             type="button" 
                             className={styles.loginBtn} 
-                            onClick={onLogin}
+                            onClick={loginWithGoogle}
                         >
                             Conectar con Google
                         </button>
