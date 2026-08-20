@@ -3,8 +3,6 @@ import {
   signOut, 
   onAuthStateChanged, 
   signInWithRedirect, 
-  signInWithPopup,
-  getRedirectResult,
   GoogleAuthProvider 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -38,58 +36,37 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // 1. Intentamos capturar si volvemos de un redirect sin bloquear la app
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          syncUserToFirestore(result.user);
-        }
-      })
-      .catch((err) => {
-        console.warn("Aviso en resultado de redirect:", err);
-      });
-
-    // 2. Suscripción global de sesión
+    // Escuchador único: Firebase maneja la sesión automáticamente tras el redirect
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        await syncUserToFirestore(currentUser);
-      } else {
-        setUser(null);
+      try {
+        if (currentUser) {
+          setUser(currentUser);
+          await syncUserToFirestore(currentUser);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error en AuthState:", err);
+      } finally {
+        // Garantiza que el spinner se apague SIEMPRE
+        setAuthLoading(false);
       }
-      setAuthLoading(false); // Liberar el spinner SIEMPRE
     });
 
     return () => unsubscribe();
   }, []);
 
- const loginWithGoogle = async (e) => {
-  if (e && e.preventDefault) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
+  const loginWithGoogle = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
 
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
-  // Detección estricta de mobile
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  try {
-    if (isMobile) {
-      // En mobile sí o sí hacemos redirect
-      await signInWithRedirect(auth, provider);
-    } else {
-      // En desktop usamos SOLO popup
-      await signInWithPopup(auth, provider);
-    }
-  } catch (error) {
-    console.error("Error en login:", error);
-    if (error.code === 'auth/popup-blocked') {
-      alert("Tu navegador bloqueó la ventana emergente. Por favor, habilitá los popups para iniciar sesión.");
-    }
-  }
-};
+    // Cero Regex, cero Popups. Redirección limpia universal:
+    signInWithRedirect(auth, provider).catch((error) => {
+      console.error("Error al redirigir:", error);
+    });
+  };
 
   const logout = async () => {
     try {
