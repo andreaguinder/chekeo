@@ -52,20 +52,25 @@ export function AuthProvider({ children }) {
         return () => unsubscribe();
     }, []);
 
-    const loginWithGoogle = async () => {
-        try {
-            const result = await signInWithPopup(auth, googleProvider);
-            if (result?.user) {
-                await syncUserToFirestore(result.user);
-            }
-        } catch (error) {
-            if (error.code === 'auth/popup-closed-by-user') {
-                console.log("El usuario cerró la ventana emergente.");
-                return;
-            }
-            console.error("Error en el inicio de sesión con Google:", error);
+const loginWithGoogle = async () => {
+    try {
+        await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+        if (error.code === 'auth/popup-closed-by-user') {
+            console.log("El usuario cerró la ventana emergente.");
+            return;
         }
-    };
+
+        // Si el navegador de la compu bloqueó el popup, caemos a redirect
+        if (error.code === 'auth/popup-blocked') {
+            console.warn("Popup bloqueado por el navegador. Intentando redirect...");
+            await signInWithRedirect(auth, googleProvider);
+            return;
+        }
+
+        console.error("Error en el inicio de sesión con Google:", error);
+    }
+};
 
     const logout = async () => {
         try {
