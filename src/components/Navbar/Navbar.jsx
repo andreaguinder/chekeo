@@ -52,13 +52,13 @@ const Navbar = ({ onSearch, imagen, alt }) => {
                             </button>
                         </div>
                     ) : (
-                        <button 
-                            type="button" 
-                            className={styles.loginBtn} 
-                            onClick={loginWithGoogle}
-                        >
-                            Conectar con Google
-                        </button>
+<button 
+  type="button" 
+  className={styles.loginBtn} 
+  onClick={(e) => loginWithGoogle(e)}
+>
+  Conectar con Google
+</button>
                     )}
                 </div>
             </div>

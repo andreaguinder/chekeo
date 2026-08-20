@@ -1,12 +1,9 @@
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { 
   signOut, 
   onAuthStateChanged, 
   signInWithRedirect, 
   signInWithPopup, 
-  getRedirectResult,
-  setPersistence,
-  browserLocalPersistence,
   GoogleAuthProvider 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -17,7 +14,6 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const isExecutingLogin = useRef(false);
 
   const syncUserToFirestore = async (loggedUser) => {
     if (!loggedUser) return;
@@ -36,81 +32,49 @@ export function AuthProvider({ children }) {
         }, { merge: true });
       }
     } catch (error) {
-      console.error("Error al sincronizar usuario en Firestore:", error);
+      console.error("Error en Firestore:", error);
     }
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initAuth = async () => {
-      try {
-        // Asegurar persistencia local
-        await setPersistence(auth, browserLocalPersistence);
-
-        // Procesar credenciales si viene de un redirect
-        const redirectResult = await getRedirectResult(auth);
-        if (redirectResult?.user && isMounted) {
-          await syncUserToFirestore(redirectResult.user);
-          setUser(redirectResult.user);
-        }
-      } catch (error) {
-        console.error("Error al procesar el resultado del redirect:", error);
-      }
-    };
-
-    initAuth();
-
-    // Listener global de Firebase Auth
+    // Un solo listener: escucha login, logout y retornos de redirect
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (isMounted) {
-        setUser(currentUser);
+      try {
         if (currentUser) {
+          setUser(currentUser);
           await syncUserToFirestore(currentUser);
+        } else {
+          setUser(null);
         }
-        // Desbloquear SIEMPRE el loader
-        setAuthLoading(false);
+      } catch (err) {
+        console.error("Error en AuthState:", err);
+      } finally {
+        setAuthLoading(false); // Destraba el spinner SIEMPRE
       }
     });
 
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = async () => {
-    // Evitar múltiples disparos simultáneos
-    if (isExecutingLogin.current) return;
-    isExecutingLogin.current = true;
+  const loginWithGoogle = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
 
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    try {
-      if (isMobile) {
-        await signInWithRedirect(auth, provider);
-      } else {
-        try {
-          await signInWithPopup(auth, provider);
-        } catch (error) {
-          if (error.code === 'auth/popup-blocked') {
-            console.warn("Popup bloqueado por el navegador/extensión. Redirigiendo...");
-            await signInWithRedirect(auth, provider);
-          } else if (error.code === 'auth/popup-closed-by-user') {
-            // El usuario cerró la ventana manualmente
-            return;
-          } else {
-            console.error("Error en popup:", error);
-          }
+    if (isMobile) {
+      signInWithRedirect(auth, provider).catch(err => console.error("Error redirect:", err));
+    } else {
+      signInWithPopup(auth, provider).catch((error) => {
+        if (error.code === 'auth/popup-blocked') {
+          // Si una extensión lo frena en desktop, manda redirect como auxilio
+          signInWithRedirect(auth, provider);
+        } else if (error.code !== 'auth/popup-closed-by-user') {
+          console.error("Error popup:", error);
         }
-      }
-    } catch (err) {
-      console.error("Error general en loginWithGoogle:", err);
-    } finally {
-      isExecutingLogin.current = false;
+      });
     }
   };
 
