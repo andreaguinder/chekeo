@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { 
   signOut, 
   onAuthStateChanged, 
-  signInWithRedirect, 
+  signInWithPopup, 
+  signInWithRedirect,
   GoogleAuthProvider 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -31,12 +32,11 @@ export function AuthProvider({ children }) {
         }, { merge: true });
       }
     } catch (error) {
-      console.error("Error en Firestore:", error);
+      console.error("Error al sincronizar usuario:", error);
     }
   };
 
   useEffect(() => {
-    // Escuchador único: Firebase maneja la sesión automáticamente tras el redirect
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       try {
         if (currentUser) {
@@ -48,24 +48,28 @@ export function AuthProvider({ children }) {
       } catch (err) {
         console.error("Error en AuthState:", err);
       } finally {
-        // Garantiza que el spinner se apague SIEMPRE
-        setAuthLoading(false);
+        setAuthLoading(false); // Apaga el spinner SIEMPRE
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = (e) => {
+  const loginWithGoogle = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    // Cero Regex, cero Popups. Redirección limpia universal:
-    signInWithRedirect(auth, provider).catch((error) => {
-      console.error("Error al redirigir:", error);
-    });
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      if (error.code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, provider);
+      } else if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("Error al iniciar sesión:", error);
+      }
+    }
   };
 
   const logout = async () => {
