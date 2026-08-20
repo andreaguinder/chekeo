@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // 👤 Función para guardar o actualizar al usuario en Firestore
   const syncUserToFirestore = async (loggedUser) => {
     if (!loggedUser) return;
     try {
@@ -39,7 +38,7 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // 1. Capturar el resultado del redirect al volver de Google (clave para que funcione en PROD)
+    // Escuchar el retorno por si viene de un redirect (móviles)
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
@@ -51,14 +50,11 @@ export function AuthProvider({ children }) {
         console.error("Error al procesar el resultado del redirect:", error);
       });
 
-    // 2. Escuchar cambios de estado en Auth
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-
       if (currentUser) {
         await syncUserToFirestore(currentUser);
       }
-
       setAuthLoading(false);
     });
 
@@ -66,22 +62,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   const loginWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
-      const isDevelopment = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    // Detección de dispositivos móviles
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-      if (isDevelopment) {
-        // En local usamos Popup para iterar rápido
-        await signInWithPopup(auth, provider);
-      } else {
-        // En producción usás Redirect exactamente como en Zylos
-        await signInWithRedirect(auth, provider);
+    if (isMobile) {
+      // En celular usás redirect
+      await signInWithRedirect(auth, provider);
+    } else {
+      // En escritorio usamos Popup directamente sin asyncs previos
+      try {
+        const result = await signInWithPopup(auth, provider);
+        if (result?.user) {
+          await syncUserToFirestore(result.user);
+        }
+      } catch (error) {
+        if (error.code === 'auth/popup-closed-by-user') return;
+        console.error("Error en el inicio de sesión con Google:", error);
       }
-    } catch (error) {
-      console.error("Error al iniciar sesión con Google:", error);
-      throw error;
     }
   };
 
@@ -91,7 +91,6 @@ export function AuthProvider({ children }) {
       setUser(null);
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
-      throw error;
     }
   };
 
