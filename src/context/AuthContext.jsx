@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
-  signInWithRedirect,
-  getRedirectResult, 
   signOut 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -11,6 +9,7 @@ import { auth, db, googleProvider } from '../config/firebase';
 
 const AuthContext = createContext();
 
+// Forzamos a que siempre pregunte qué cuenta usar
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export function AuthProvider({ children }) {
@@ -39,19 +38,7 @@ export function AuthProvider({ children }) {
     };
 
     useEffect(() => {
-        // 1. Procesar resultado de redirect (si vino de mobile o un redirect explícito)
-        getRedirectResult(auth)
-            .then(async (result) => {
-                if (result?.user) {
-                    await syncUserToFirestore(result.user);
-                    setUser(result.user);
-                }
-            })
-            .catch((error) => {
-                console.error("Error procesando resultado de redirect:", error);
-            });
-
-        // 2. Escuchar cambios de estado en Auth
+        // Escuchar el cambio de estado global del usuario
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 await syncUserToFirestore(currentUser);
@@ -66,27 +53,17 @@ export function AuthProvider({ children }) {
     }, []);
 
     const loginWithGoogle = async () => {
-        // Detección simple para saber si es mobile/tablet
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-        if (isMobile) {
-            // En celulares usamos redirect que es más estable para vistas webview / PWA
-            await signInWithRedirect(auth, googleProvider);
-        } else {
-            // En desktop forzamos SIEMPRE Popup sin fallback a redirect
-            try {
-                const result = await signInWithPopup(auth, googleProvider);
-                if (result?.user) {
-                    await syncUserToFirestore(result.user);
-                }
-            } catch (error) {
-                // Si el usuario cierra el popup a propósito, simplemente ignoramos el error
-                if (error.code === 'auth/popup-closed-by-user') {
-                    console.log("El usuario cerró la ventana de login.");
-                    return;
-                }
-                console.error("Error en login con popup:", error);
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            if (result?.user) {
+                await syncUserToFirestore(result.user);
             }
+        } catch (error) {
+            if (error.code === 'auth/popup-closed-by-user') {
+                console.log("El usuario cerró la ventana emergente.");
+                return;
+            }
+            console.error("Error en el inicio de sesión con Google:", error);
         }
     };
 
