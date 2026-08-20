@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { 
   signOut, 
   onAuthStateChanged, 
@@ -17,6 +17,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const isExecutingLogin = useRef(false);
 
   const syncUserToFirestore = async (loggedUser) => {
     if (!loggedUser) return;
@@ -40,14 +41,16 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const initAuth = async () => {
       try {
-        // Forzar que Firebase use localStorage y no sessionStorage/cookies de 3ros
+        // Asegurar persistencia local
         await setPersistence(auth, browserLocalPersistence);
 
-        // Procesar las credenciales al volver del redirect
+        // Procesar credenciales si viene de un redirect
         const redirectResult = await getRedirectResult(auth);
-        if (redirectResult?.user) {
+        if (redirectResult?.user && isMounted) {
           await syncUserToFirestore(redirectResult.user);
           setUser(redirectResult.user);
         }
@@ -58,39 +61,56 @@ export function AuthProvider({ children }) {
 
     initAuth();
 
-    // Escuchar el estado de autenticación
+    // Listener global de Firebase Auth
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        await syncUserToFirestore(currentUser);
+      if (isMounted) {
+        setUser(currentUser);
+        if (currentUser) {
+          await syncUserToFirestore(currentUser);
+        }
+        // Desbloquear SIEMPRE el loader
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const loginWithGoogle = async () => {
+    // Evitar múltiples disparos simultáneos
+    if (isExecutingLogin.current) return;
+    isExecutingLogin.current = true;
+
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      await signInWithRedirect(auth, provider);
-    } else {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (error) {
-        if (error.code === 'auth/popup-blocked') {
-          console.warn("Popup bloqueado. Reintentando con Redirect...");
-          await signInWithRedirect(auth, provider);
-        } else if (error.code === 'auth/popup-closed-by-user') {
-          return;
-        } else {
-          console.error("Error en login:", error);
+    try {
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (error) {
+          if (error.code === 'auth/popup-blocked') {
+            console.warn("Popup bloqueado por el navegador/extensión. Redirigiendo...");
+            await signInWithRedirect(auth, provider);
+          } else if (error.code === 'auth/popup-closed-by-user') {
+            // El usuario cerró la ventana manualmente
+            return;
+          } else {
+            console.error("Error en popup:", error);
+          }
         }
       }
+    } catch (err) {
+      console.error("Error general en loginWithGoogle:", err);
+    } finally {
+      isExecutingLogin.current = false;
     }
   };
 
