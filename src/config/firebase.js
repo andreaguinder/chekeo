@@ -5,10 +5,7 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  // Si está en producción, usar el dominio actual del sitio para evitar choque de dominios
-  authDomain: window.location.hostname.includes("localhost")
-    ? import.meta.env.VITE_FIREBASE_AUTH_DOMAIN
-    : window.location.hostname,
+ authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
