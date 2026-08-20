@@ -5,6 +5,8 @@ import {
   signInWithRedirect, 
   signInWithPopup, 
   getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   GoogleAuthProvider 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -16,7 +18,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // 👤 Sincronización centralizada con Firestore
   const syncUserToFirestore = async (loggedUser) => {
     if (!loggedUser) return;
     try {
@@ -39,19 +40,25 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // Escuchar el retorno por si viene de un redirect (móviles)
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result?.user) {
-          await syncUserToFirestore(result.user);
-          setUser(result.user);
-        }
-      })
-      .catch((error) => {
-        console.error("Error al procesar el resultado del redirect:", error);
-      });
+    const initAuth = async () => {
+      try {
+        // Forzar que Firebase use localStorage y no sessionStorage/cookies de 3ros
+        await setPersistence(auth, browserLocalPersistence);
 
-    // Suscripción al estado del usuario
+        // Procesar las credenciales al volver del redirect
+        const redirectResult = await getRedirectResult(auth);
+        if (redirectResult?.user) {
+          await syncUserToFirestore(redirectResult.user);
+          setUser(redirectResult.user);
+        }
+      } catch (error) {
+        console.error("Error al procesar el resultado del redirect:", error);
+      }
+    };
+
+    initAuth();
+
+    // Escuchar el estado de autenticación
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -63,35 +70,29 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-const loginWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  if (isMobile) {
-    // Celulares van directo por redirect
-    signInWithRedirect(auth, provider).catch((error) => {
-      console.error("Error en redirect móvil:", error);
-    });
-  } else {
-    // Escritorio intenta Popup, pero si la extensión lo bloquea, hace Redirect como respaldo
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      if (error.code === 'auth/popup-blocked') {
-        console.warn("Popup bloqueado por extensión o navegador. Redirigiendo como fallback...");
-        await signInWithRedirect(auth, provider);
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        // El usuario cerró la ventanita a propósito, no hacemos nada
-        return;
-      } else {
-        console.error("Error en login con Google:", error);
+    if (isMobile) {
+      await signInWithRedirect(auth, provider);
+    } else {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        if (error.code === 'auth/popup-blocked') {
+          console.warn("Popup bloqueado. Reintentando con Redirect...");
+          await signInWithRedirect(auth, provider);
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          return;
+        } else {
+          console.error("Error en login:", error);
+        }
       }
     }
-  }
-};
-
+  };
 
   const logout = async () => {
     try {
