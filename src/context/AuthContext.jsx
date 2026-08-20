@@ -63,32 +63,33 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = async (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+ const loginWithGoogle = async (e) => {
+  if (e && e.preventDefault) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
 
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
-    try {
-      // Intentamos con Popup primero
+  // Detección estricta de mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  try {
+    if (isMobile) {
+      // En mobile sí o sí hacemos redirect
+      await signInWithRedirect(auth, provider);
+    } else {
+      // En desktop usamos SOLO popup
       await signInWithPopup(auth, provider);
-    } catch (error) {
-      // Si el navegador o extensión bloquea el Popup, pasamos automáticamente a Redirect
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        console.warn("Popup bloqueado o cerrado. Pasando a login por redirección...");
-        try {
-          await signInWithRedirect(auth, provider);
-        } catch (redirectError) {
-          console.error("Error en redirect:", redirectError);
-        }
-      } else {
-        console.error("Error en login:", error);
-      }
     }
-  };
+  } catch (error) {
+    console.error("Error en login:", error);
+    if (error.code === 'auth/popup-blocked') {
+      alert("Tu navegador bloqueó la ventana emergente. Por favor, habilitá los popups para iniciar sesión.");
+    }
+  }
+};
 
   const logout = async () => {
     try {
