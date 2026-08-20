@@ -63,16 +63,33 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // 🚀 Función síncrona inmediata para disparar el evento directo del usuario
- const loginWithGoogle = () => {
+const loginWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
-  // Disparar sin async/await intermedio
-  return signInWithPopup(auth, provider).catch((error) => {
-    if (error.code === 'auth/popup-closed-by-user') return;
-    console.error("Error en popup de Google:", error);
-  });
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Celulares van directo por redirect
+    signInWithRedirect(auth, provider).catch((error) => {
+      console.error("Error en redirect móvil:", error);
+    });
+  } else {
+    // Escritorio intenta Popup, pero si la extensión lo bloquea, hace Redirect como respaldo
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      if (error.code === 'auth/popup-blocked') {
+        console.warn("Popup bloqueado por extensión o navegador. Redirigiendo como fallback...");
+        await signInWithRedirect(auth, provider);
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        // El usuario cerró la ventanita a propósito, no hacemos nada
+        return;
+      } else {
+        console.error("Error en login con Google:", error);
+      }
+    }
+  }
 };
 
 
