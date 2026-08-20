@@ -16,6 +16,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // 👤 Sincronización centralizada con Firestore
   const syncUserToFirestore = async (loggedUser) => {
     if (!loggedUser) return;
     try {
@@ -50,6 +51,7 @@ export function AuthProvider({ children }) {
         console.error("Error al procesar el resultado del redirect:", error);
       });
 
+    // Suscripción al estado del usuario
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -61,27 +63,23 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = async () => {
+  // 🚀 Función síncrona inmediata para disparar el evento directo del usuario
+  const loginWithGoogle = () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    // Detección de dispositivos móviles
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile) {
-      // En celular usás redirect
-      await signInWithRedirect(auth, provider);
+      signInWithRedirect(auth, provider).catch((error) => {
+        console.error("Error en redirect de Google:", error);
+      });
     } else {
-      // En escritorio usamos Popup directamente sin asyncs previos
-      try {
-        const result = await signInWithPopup(auth, provider);
-        if (result?.user) {
-          await syncUserToFirestore(result.user);
-        }
-      } catch (error) {
+      // Disparo directo síncrono -> Cero bloqueos de popup
+      signInWithPopup(auth, provider).catch((error) => {
         if (error.code === 'auth/popup-closed-by-user') return;
-        console.error("Error en el inicio de sesión con Google:", error);
-      }
+        console.error("Error en popup de Google:", error);
+      });
     }
   };
 
