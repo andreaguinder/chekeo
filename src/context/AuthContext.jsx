@@ -39,47 +39,52 @@ export function AuthProvider({ children }) {
         }
     };
 
-    useEffect(() => {
-        // 1. Procesar el resultado del redirect
-        getRedirectResult(auth)
-            .then(async (result) => {
-                if (result?.user) {
-                    await syncUserToFirestore(result.user);
-                    setUser(result.user);
-                }
-            })
-            .catch((error) => {
-                console.error("Error al procesar redirect:", error);
-            });
-
-        // 2. Escuchar la sesión de Firebase
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                await syncUserToFirestore(currentUser);
-            }
-            setUser(currentUser);
-            setAuthLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    const loginWithGoogle = async () => {
-        try {
-            const result = await signInWithPopup(auth, googleProvider);
+   useEffect(() => {
+    // 1. Procesar la vuelta del redirect si ocurrió uno
+    getRedirectResult(auth)
+        .then(async (result) => {
             if (result?.user) {
                 await syncUserToFirestore(result.user);
+                setUser(result.user);
             }
-        } catch (error) {
-            if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-                console.warn("Popup bloqueado, redirigiendo...");
-                await signInWithRedirect(auth, googleProvider);
-            } else {
-                console.error("Error al iniciar sesión con Google:", error);
-                throw error;
-            }
+        })
+        .catch((error) => {
+            console.error("Error procesando resultado de redirect:", error);
+        });
+
+    // 2. Escuchar cambios de estado en Auth
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+            await syncUserToFirestore(currentUser);
+            setUser(currentUser);
+        } else {
+            setUser(null);
         }
-    };
+        setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+}, []);
+
+const loginWithGoogle = async () => {
+    try {
+        // En la compu intentamos SIEMPRE con Pop-up primero
+        const result = await signInWithPopup(auth, googleProvider);
+        if (result?.user) {
+            await syncUserToFirestore(result.user);
+        }
+    } catch (error) {
+        console.error("Error en login con popup:", error);
+        
+        // Solo si el navegador bloquea el popup (común en celus), probamos con redirect
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            console.warn("Popup bloqueado, intentando redirect...");
+            await signInWithRedirect(auth, googleProvider);
+        } else {
+            throw error;
+        }
+    }
+};
 
     const logout = async () => {
         try {
