@@ -16,9 +16,8 @@ import { useFirebaseTasks } from "./hooks/useFirebaseTasks";
 import logo from "./assets/logo-chekeo.png";
 
 function App() {
-  const { user, loginWithGoogle, logout, authLoading } = useAuth();
+  const { user, authLoading } = useAuth();
 
-  // 🚀 Súper clave: Le pasamos el 'user' del contexto para que el hook use la misma sesión
   const [listaTareas, setListaTareas] = useFirebaseTasks(tareas, user);
 
   const agregarTarea = (dataTareas) => {
@@ -58,7 +57,7 @@ function App() {
     return () => window.removeEventListener('appinstalled', handleAppInstalled);
   }, []);
 
-  // Tu componente hermoso de loading interactuando acá
+  // Si está resolviendo la autenticación inicial, mostramos el loader
   if (authLoading) {
     return <ContainerLoading />;
   }
@@ -70,9 +69,6 @@ function App() {
           imagen={logo} 
           alt={logoAlt} 
           onSearch={(valor) => setBusqueda(valor)}
-          user={user}
-          onLogin={loginWithGoogle}
-          onLogout={logout}
         />
         
         <Form agregarTarea={agregarTarea} />

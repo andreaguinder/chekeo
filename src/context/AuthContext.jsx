@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Sincronización simple
   const syncUserToFirestore = async (loggedUser) => {
     if (!loggedUser) return;
     try {
@@ -37,44 +38,37 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // Un solo listener: escucha login, logout y retornos de redirect
+    // Escuchador único de sesión
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      try {
-        if (currentUser) {
-          setUser(currentUser);
-          await syncUserToFirestore(currentUser);
-        } else {
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Error en AuthState:", err);
-      } finally {
-        setAuthLoading(false); // Destraba el spinner SIEMPRE
+      if (currentUser) {
+        setUser(currentUser);
+        await syncUserToFirestore(currentUser);
+      } else {
+        setUser(null);
       }
+      setAuthLoading(false); // Liberar el loader sí o sí
     });
 
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
+  const loginWithGoogle = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      signInWithRedirect(auth, provider).catch(err => console.error("Error redirect:", err));
-    } else {
-      signInWithPopup(auth, provider).catch((error) => {
-        if (error.code === 'auth/popup-blocked') {
-          // Si una extensión lo frena en desktop, manda redirect como auxilio
-          signInWithRedirect(auth, provider);
-        } else if (error.code !== 'auth/popup-closed-by-user') {
-          console.error("Error popup:", error);
-        }
-      });
+    try {
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
+    } catch (error) {
+      console.error("Error en login:", error);
     }
   };
 
@@ -95,9 +89,5 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 }
